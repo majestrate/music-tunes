@@ -1,8 +1,9 @@
 import torchaudio
 import torch
 
-import sys 
+import sys
 import os
+
 os.environ["MUSICGEN_ROOT"] = os.path.join("v", "cache")
 
 import time
@@ -14,28 +15,32 @@ from audiocraft.data.audio_utils import normalize_audio, convert_audio_channels,
 dur = 30
 backlog = 20
 
-model = MusicGen.get_pretrained('large')
+model = MusicGen.get_pretrained("large")
 model.set_generation_params(duration=dur)
+
 
 def gen(txt, loops):
     print(f"generating '{txt}'")
     prompt = [txt]
     wav = model.generate(prompt)  # generates all samples.
 
-
-    name = f'clip_{int(time.time())}'
+    name = f"clip_{int(time.time())}"
     z = 0
-    audio_write(f'{name}_{z:04d}', wav[0].cpu(), model.sample_rate, strategy="loudness")
+    audio_write(f"{name}_{z:04d}", wav[0].cpu(), model.sample_rate, strategy="loudness")
     extend(name, loops, prompt)
-    
+
+
 def extend(name, loops, prompt):
-    print(f'extend {name} {prompt}')
+    print(f"extend {name} {prompt}")
     for n in range(loops):
         print(n)
-        wav, sr = audio_read(f'{name}_{n:04d}.wav', seek_time=backlog, duration=dur-backlog)
+        wav, sr = audio_read(
+            f"{name}_{n:04d}.wav", seek_time=backlog, duration=dur - backlog
+        )
         out = model.generate_continuation(wav, sr, prompt)
-        n+=1
-        audio_write(f'{name}_{n:04d}', out.cpu()[-1], sr, strategy="loudness")   
+        n += 1
+        audio_write(f"{name}_{n:04d}", out.cpu()[-1], sr, strategy="loudness")
+
 
 args = sys.argv[1:]
 if len(args) == 0:
